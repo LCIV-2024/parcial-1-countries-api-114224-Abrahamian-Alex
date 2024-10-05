@@ -1,0 +1,42 @@
+services:
+  mysql:
+    container_name: mysql
+    image: mysql:8
+    environment:
+      MYSQL_DATABASE: countryDb
+      MYSQL_USER: country
+      MYSQL_PASSWORD: country123
+      MYSQL_ROOT_PASSWORD: rootpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - country-network
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/countryDb
+      SPRING_DATASOURCE_USERNAME: country
+      SPRING_DATASOURCE_PASSWORD: country123
+      EXTERNAL_API_URL: https://restcountries.com/v3.1/all
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+    networks:
+      - country-network
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "--silent" ]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 5s
+
+volumes:
+  mysql_data:
+
+networks:
+  country-network:
